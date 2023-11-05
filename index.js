@@ -181,7 +181,7 @@ async function installSfmlFromSource({sfml, config}) {
 
     await depsTask;
     {
-        const command = ["cmake", ".", "-DBUILD_SHARED_LIBS=ON"];
+        const command = ["cmake", ".", "-DBUILD_SHARED_LIBS=OFF"];
         if (platform !== Windows) {
             command.push(`-DCMAKE_BUILD_TYPE=${config}`);
         }
