@@ -28,18 +28,19 @@ async function run() {
     }
 
     try {
-        const params = {"sfml": "latest", "config": "Release", "DownloadOnly": false};
+        const bools = new Set(["DownloadOnly", "nocache"]);
+        const params = {"sfml": "latest", "config": "Release", "DownloadOnly": false, "nocache": false};
         for (const key of Object.keys(params)) {
             let value;
-            if(key === "DownloadOnly") {
+            if(bools.has(key)) {
                 params[key] = Core.getBooleanInput(key);
-                Core.info("Received DownloadOnly config=" + params[key]);
+                Core.info(`Received ${key} config=${params[key]}`);
             } else if ((value = Core.getInput(key))) {
                 params[key] = value;
             }
         }
         params.config = params.config.charAt(0).toUpperCase() + params.config.slice(1);
-        Core.info(`params: DownloadOnly:${params.DownloadOnly}`);
+        Core.info(`params: ${params}`);
 
         if(params.DownloadOnly) {
             downloadSfml(params);
