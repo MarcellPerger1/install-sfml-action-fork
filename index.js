@@ -28,21 +28,27 @@ async function run() {
     }
 
     try {
-        const params = {"sfml": "latest", "config": "Release"};
-        for (const key of ["sfml", "config"]) {
+        const params = {"sfml": "latest", "config": "Release", "DownloadOnly": false};
+        for (const key of Object.keys(params)) {
             let value;
-            if ((value = Core.getInput(key))) {
+            if(key === "DownloadOnly") {
+                params[key] = Core.getBooleanInput(key);
+            } else if ((value = Core.getInput(key))) {
                 params[key] = value;
             }
         }
         params.config = params.config.charAt(0).toUpperCase() + params.config.slice(1);
 
-        if (params.sfml === Package && platform === Linux) {
-            await installSfmlApt();
-        } else if (params.sfml === Package && platform === Mac) {
-            await installSfmlBrew();
+        if(params.downloadOnly) {
+            downloadSfml(params);
         } else {
-            await installSfmlFromSource(params);
+            if (params.sfml === Package && platform === Linux) {
+                await installSfmlApt();
+            } else if (params.sfml === Package && platform === Mac) {
+                await installSfmlBrew();
+            } else {
+                await installSfmlFromSource(params);
+            }
         }
     } catch (error) {
         Core.setFailed(error);
@@ -146,6 +152,48 @@ async function installBrewPackages(packages) {
     Core.startGroup("Finished installing packages");
     Core.info(stdout);
     Core.endGroup();
+}
+
+async function downloadSfml({sfml, config}) {
+    checkVersion("SFML", sfml, [Latest, Nightly, NumericVersion]);
+
+    let depsFunc = async () => {};
+    if (platform === Linux) {
+        depsFunc = installSfmlAptDeps;
+    } else if (platform === Mac) {
+        depsFunc = installSfmlBrewDeps;
+    }
+    const depsTask = depsFunc({sfml: (sfml === Nightly || sfml === Latest) ? "2.6.0" : sfml});
+
+    const ref = await findRef({name: "SFML", version: sfml, apiBase: GitHubApiBase});
+    Core.setOutput("sfml", ref);
+    const path = Path.join(process.env["RUNNER_TEMP"], `sfml-${sfml}-${config}`);
+    const cacheKey = `install-sfml-v1-${ref}-${config}--${OS.arch()}-${OS.platform()}-${OS.release()}`;
+
+    let restored = null;
+    try {
+        Core.info(`Trying to restore cache: key '${cacheKey}`);
+        restored = await Cache.restoreCache([path], cacheKey);
+    } catch (error) {
+        Core.warning(error.message);
+    }
+    if (!restored) {
+        Core.info(`Cache not found for key '${cacheKey}'`);
+        await downloadSource({name: "SFML", ref, path, apiBase: GitHubApiBase});
+    }
+    try {
+        await FS.unlink(Path.join(path, "CMakeCache.txt"));
+    } catch (error) {}
+
+    await depsTask;
+    if (restored !== cacheKey) {
+        Core.info(`Saving cache: '${cacheKey}'`);
+        try {
+            await Cache.saveCache([path], cacheKey);
+        } catch (error) {
+            Core.warning(error.message);
+        }
+    }
 }
 
 async function installSfmlFromSource({sfml, config}) {
