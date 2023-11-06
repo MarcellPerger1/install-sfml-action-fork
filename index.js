@@ -180,7 +180,7 @@ async function installSfmlFromSource({sfml, config}) {
     } catch (error) {}
 
     await depsTask;
-    const archArgs = platform === Windows ? ["-A", "x86"] : [];
+    const archArgs = platform === Windows ? ["-A", "x86", "-DCMAKE_GENERATOR_PLATFORM=x86"] : [];
     {
         const command = ["cmake", ".", "-DBUILD_SHARED_LIBS=OFF", "-DSFML_BUILD_GRAPHICS=ON", "-DSFML_BUILD_WINDOW=ON", ...archArgs];
         if (platform !== Windows) {
