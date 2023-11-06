@@ -189,8 +189,8 @@ async function downloadSfml({sfml, config}) {
 
     await depsTask;
     Core.exportVariable("SF_SRC_PATH", path);
-    Core.info("cwd: ", process.cwd());
-    Core.info("path: ", path);
+    Core.info("cwd: " + process.cwd());
+    Core.info("path: " +path);
     if (restored !== cacheKey) {
         Core.info(`Saving cache: '${cacheKey}'`);
         try {
