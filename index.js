@@ -180,8 +180,9 @@ async function installSfmlFromSource({sfml, config}) {
     } catch (error) {}
 
     await depsTask;
+    const archArgs = platform === Windows ? ["-A", "x86"] : [];
     {
-        const command = ["cmake", ".", "-DBUILD_SHARED_LIBS=OFF", "-DSFML_BUILD_GRAPHICS=ON", "-DSFML_BUILD_WINDOW=ON"];
+        const command = ["cmake", ".", "-DBUILD_SHARED_LIBS=OFF", "-DSFML_BUILD_GRAPHICS=ON", "-DSFML_BUILD_WINDOW=ON", ...archArgs];
         if (platform !== Windows) {
             command.push(`-DCMAKE_BUILD_TYPE=${config}`);
         }
@@ -193,7 +194,7 @@ async function installSfmlFromSource({sfml, config}) {
         Core.info(stdout);
         Core.endGroup();
     }
-    const command = ["cmake", "--build", ".", "-j", "4"];
+    const command = ["cmake", "--build", ".", "-j", "4", ...archArgs];
     {
         if (platform === Windows) {
             command.push("--config", config);
