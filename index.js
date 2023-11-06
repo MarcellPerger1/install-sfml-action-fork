@@ -33,11 +33,13 @@ async function run() {
             let value;
             if(key === "DownloadOnly") {
                 params[key] = Core.getBooleanInput(key);
+                Core.info("Received DownloadOnly config=" + params[key]);
             } else if ((value = Core.getInput(key))) {
                 params[key] = value;
             }
         }
         params.config = params.config.charAt(0).toUpperCase() + params.config.slice(1);
+        Core.info(`params: DownloadOnly:${params.DownloadOnly}`);
 
         if(params.downloadOnly) {
             downloadSfml(params);
