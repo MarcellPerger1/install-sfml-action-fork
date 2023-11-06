@@ -41,7 +41,7 @@ async function run() {
         params.config = params.config.charAt(0).toUpperCase() + params.config.slice(1);
         Core.info(`params: DownloadOnly:${params.DownloadOnly}`);
 
-        if(params.downloadOnly) {
+        if(params.DownloadOnly) {
             downloadSfml(params);
         } else {
             if (params.sfml === Package && platform === Linux) {
