@@ -157,7 +157,7 @@ async function installBrewPackages(packages) {
     Core.endGroup();
 }
 
-async function downloadSfml({sfml, config}) {
+async function downloadSfml({sfml, config, nocache}) {
     checkVersion("SFML", sfml, [Latest, Nightly, NumericVersion]);
 
     let depsFunc = async () => {};
@@ -174,14 +174,17 @@ async function downloadSfml({sfml, config}) {
     const cacheKey = `install-sfml-v1-${ref}-${config}--${OS.arch()}-${OS.platform()}-${OS.release()}`;
 
     let restored = null;
-    try {
-        Core.info(`Trying to restore cache: key '${cacheKey}`);
-        restored = await Cache.restoreCache([path], cacheKey);
-    } catch (error) {
-        Core.warning(error.message);
+    if(!nocache) {
+        try {
+            Core.info(`Trying to restore cache: key '${cacheKey}`);
+            restored = await Cache.restoreCache([path], cacheKey);
+        } catch (error) {
+            Core.warning(error.message);
+        }
     }
+    
     if (!restored) {
-        Core.info(`Cache not found for key '${cacheKey}'`);
+        Core.info(`Cache not found/disabled for key '${cacheKey}'`);
         await downloadSource({name: "SFML", ref, path, apiBase: GitHubApiBase});
     }
     try {
@@ -192,7 +195,7 @@ async function downloadSfml({sfml, config}) {
     Core.exportVariable("SF_SRC_PATH", path);
     Core.info("cwd: " + process.cwd());
     Core.info("path: " +path);
-    if (restored !== cacheKey) {
+    if (!nocache && restored !== cacheKey) {
         Core.info(`Saving cache: '${cacheKey}'`);
         try {
             await Cache.saveCache([path], cacheKey);
