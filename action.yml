@@ -10,6 +10,9 @@ inputs:
   DownloadOnly:
     description: If true, dont build, only download
     default: false
+  nocache:
+    description: If true, dont use cache
+    default: false
   token:
     description: Personal access token (auto-populated)
     default: ${{ github.token }}
