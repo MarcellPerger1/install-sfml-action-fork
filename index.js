@@ -28,7 +28,7 @@ async function run() {
     }
 
     try {
-        const params = {"sfml": "latest", "config": "Release"};
+        const params = {"sfml": "latest", "config": "Release", "useStatic": false};
         for (const key of ["sfml", "config"]) {
             let value;
             if ((value = Core.getInput(key))) {
@@ -36,6 +36,9 @@ async function run() {
             }
         }
         params.config = params.config.charAt(0).toUpperCase() + params.config.slice(1);
+        for (const key of ["useStatic"]) {
+            params[key] = Core.getBooleanInput(key);
+        }
 
         if (params.sfml === Package && platform === Linux) {
             await installSfmlApt();
@@ -148,7 +151,7 @@ async function installBrewPackages(packages) {
     Core.endGroup();
 }
 
-async function installSfmlFromSource({sfml, config}) {
+async function installSfmlFromSource({sfml, config, useStatic}) {
     checkVersion("SFML", sfml, [Latest, Nightly, NumericVersion]);
 
     let depsFunc = async () => {};
@@ -162,7 +165,7 @@ async function installSfmlFromSource({sfml, config}) {
     const ref = await findRef({name: "SFML", version: sfml, apiBase: GitHubApiBase});
     Core.setOutput("sfml", ref);
     const path = Path.join(process.env["RUNNER_TEMP"], `sfml-${sfml}-${config}`);
-    const cacheKey = `install-sfml-v1-${ref}-${config}--${OS.arch()}-${OS.platform()}-${OS.release()}`;
+    const cacheKey = `install-sfml-v1-${ref}-${config}-${useStatic ? 'static' : 'shared'}--${OS.arch()}-${OS.platform()}-${OS.release()}`;
 
     let restored = null;
     try {
@@ -181,7 +184,7 @@ async function installSfmlFromSource({sfml, config}) {
 
     await depsTask;
     {
-        const command = ["cmake", ".", "-DBUILD_SHARED_LIBS=ON"];
+        const command = ["cmake", ".", `-DBUILD_SHARED_LIBS=${useStatic ? "OFF" : "ON"}`];
         if (platform !== Windows) {
             command.push(`-DCMAKE_BUILD_TYPE=${config}`);
         }

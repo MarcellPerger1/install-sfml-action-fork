@@ -7,6 +7,9 @@ inputs:
   config:
     description: The configuration of the build ("Release", "Debug")
     default: Release
+  useStatic:
+    description: Use static linking? Only used if installing from source.
+    default: false
   token:
     description: Personal access token (auto-populated)
     default: ${{ github.token }}
